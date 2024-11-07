@@ -31,6 +31,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final List<String> whiteList = List.of(
             "/api/v1/user/login",
+            "/api/v1/user/signup",
 
             "/error",
             "/login",
@@ -48,6 +49,7 @@ public class JwtFilter extends OncePerRequestFilter {
         AntPathMatcher antPathMatcher = new AntPathMatcher();
 
         for(String p : whiteList) {
+            System.out.println(p+" "+path+" "+antPathMatcher.match(p, path));
             if(antPathMatcher.match(p, path)){
                 return true;
             }

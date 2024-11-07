@@ -14,7 +14,7 @@ public enum UserErrorCode implements ErrorCode {
     USER_MISMATCH(HttpStatus.BAD_REQUEST, "USER-004", "사용자가 일치하지 않습니다."),
     PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "USER-005", "비밀번호가 일치하지 않습니다."),
     EMAIL_DUPLICATED(HttpStatus.CONFLICT, "USER-006", "중복된 유저 이메일입니다."),
-    NICKNAME_DUPLICATED(HttpStatus.CONFLICT, "USER-007", "중복된 유저 닉네임입니다.");
+    LOGIN_FAIL(HttpStatus.BAD_REQUEST, "USER-007", "이메일 혹은 비밀번호가 틀렸습니다");
 
     private HttpStatus httpStatus;
     private String code;

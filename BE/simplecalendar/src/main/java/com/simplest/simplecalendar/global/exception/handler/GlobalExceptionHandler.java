@@ -39,8 +39,11 @@ public class GlobalExceptionHandler { // extends ResponseEntityExceptionHandler 
         .findFirst()
         .orElse(null);
 
+    String message = e.getErrorCode().getMessage();
+    if (e.getLog() != null) message += " "+e.getLog();
+
     log.warn("요청 실패 => 요청 경로: {}, 발생 시간: {}, 발생 위치: {}, 오류메세지: {}", request.getRequestURL(), now,
-        location, e.getLog());
+        location, message);
 
     return ResponseEntity.status(e.getErrorCode().getHttpStatus())
         .body(ApiResponse.createError(e.getErrorCode().getCode(), e.getErrorCode().getMessage()));
