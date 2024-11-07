@@ -1,7 +1,7 @@
 package com.simplest.simplecalendar.global.config;
 
 
-import com.simplest.simplecalendar.domain.user.service.impl.CustomOAuth2UserService;
+import com.simplest.simplecalendar.domain.user.service.CustomOAuth2UserService;
 import com.simplest.simplecalendar.global.handler.OAuth2AuthenticationFailureHandler;
 import com.simplest.simplecalendar.global.handler.OAuth2AuthenticationSuccessHandler;
 import com.simplest.simplecalendar.global.jwt.filter.JwtFilter;
@@ -9,7 +9,6 @@ import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -35,11 +34,6 @@ public class SecurityConfig {
 
 
     @Bean
-    public PasswordEncoder getPasswordEncoder() {
-        return new BCryptPasswordEncoder(); // 직접 빈 주입
-    }
-
-    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(CsrfConfigurer::disable)
@@ -51,9 +45,10 @@ public class SecurityConfig {
                 .httpBasic(HttpBasicConfigurer::disable) // 기본
                 .authorizeHttpRequests(
                         authorize -> authorize
-                                .dispatcherTypeMatchers(DispatcherType.ERROR)
-                                .permitAll() // 인가 안되면 자체 시큐리티 타는데 -> 이거 막아주는 로직
-
+                                .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll() // 인가 안되면 자체 시큐리티 타는데 -> 이거 막아주는 로직
+                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                                .requestMatchers("/login", "/oauth2/**", "/error").permitAll()
+                                .requestMatchers("/api/v1/user/login").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
@@ -67,4 +62,6 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+
 }

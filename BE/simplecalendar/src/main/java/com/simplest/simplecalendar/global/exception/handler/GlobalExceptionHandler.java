@@ -31,7 +31,6 @@ public class GlobalExceptionHandler { // extends ResponseEntityExceptionHandler 
   @ExceptionHandler(RestApiException.class)
   public ResponseEntity<ApiResponse<?>> handleRestApiException(RestApiException e,
                                                                HttpServletRequest request) {
-
     // 발생 시간
     LocalDateTime now = LocalDateTime.now();
 
@@ -56,7 +55,7 @@ public class GlobalExceptionHandler { // extends ResponseEntityExceptionHandler 
         .collect(Collectors.toList());
 
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .body(ApiResponse.createError("ERROR-001", errors, e.getMessage()));
+        .body(ApiResponse.createError("ERROR-001", errors, "데이터 유효성 검사에 실패했습니다."));
   }
 
   @ExceptionHandler(IllegalArgumentException.class)

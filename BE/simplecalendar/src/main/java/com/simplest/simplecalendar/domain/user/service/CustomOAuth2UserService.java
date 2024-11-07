@@ -1,4 +1,4 @@
-package com.simplest.simplecalendar.domain.user.service.impl;
+package com.simplest.simplecalendar.domain.user.service;
 
 import java.util.Collections;
 import java.util.Map;

@@ -1,6 +1,7 @@
 package com.simplest.simplecalendar.global.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -13,11 +14,15 @@ import java.util.List;
 @Configuration
 @RequiredArgsConstructor
 public class CorsConfig {
+
+    @Value("${server.host.front}")
+    private String frontHostUrl;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000"));
+        config.setAllowedOriginPatterns(Arrays.asList(frontHostUrl));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*")); // 허용되는 헤더
         config.setExposedHeaders(List.of("*")); // 노출되는 응답 헤어

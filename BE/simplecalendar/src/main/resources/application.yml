@@ -1,1 +1,52 @@
-spring.application.name=simplecalendar
+spring:
+  application:
+    name: simple-calendar
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/ical_calendar?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: ssafy
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: 8c07f8f84917e25c3d939ebb0cad5af7
+            client-secret: 8c07f8f84917e25c3d939ebb0cad5af7
+            redirect-uri: http://localhost:8080/login/oauth2/code/kakao # spring security에서는 기본적으로 /login/oauth2/code/{registrationId} 로 구성
+            client-name: Kakao
+            client-authentication-method: client_secret_post # 다른 서비스와 달리 카카오는 필수 파라미터 값들을 담아 POST로만 요청 가능
+            authorization-grant-type: authorization_code
+            scope: profile_nickname, account_email
+        provider:
+          kakao:
+            authorization_uri: <https://kauth.kakao.com/oauth/authorize>
+            token_uri: <https://kauth.kakao.com/oauth/token> # 토큰 얻는 uri
+            user-info-uri: <https://kapi.kakao.com/v2/user/me> # 토큰을 이용해 사용자의 정보를 가져오는 uri
+            user-info-authentication-method: header
+            user_name_attribute: id
+
+jwt:
+  secret: 34C7A3F7DEABB79BD438766772A77AK124D12GJ21S43KL34E45FS1HE3131F
+  expired:
+    access-token: 1000 * 60 * 60
+    refresh-token: 1000 * 60 * 60 * 24 * 30
+
+server:
+  host:
+    front: http://localhost:3000
