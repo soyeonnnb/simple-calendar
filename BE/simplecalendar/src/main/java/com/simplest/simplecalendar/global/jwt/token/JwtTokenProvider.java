@@ -47,6 +47,8 @@ public class JwtTokenProvider implements InitializingBean {
     @Value("#{${jwt.expired.refresh-token}}")
     private Integer REFRESH_TOKEN_EXPIRED_TIME;
 
+    private final String REFRESH_COOKIE_NAME = "refresh_token";
+
     private Key key;
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -71,7 +73,7 @@ public class JwtTokenProvider implements InitializingBean {
     }
 
     // Authentication 권한 정보를 담은 액세스 토큰 생성
-    public String createRefreshToken(Long id) {
+    public String createRefreshToken(Long id, HttpServletResponse httpServletResponse) {
         Date expiredAt = new Date((new Date()).getTime() + REFRESH_TOKEN_EXPIRED_TIME * 1000L);
 
         String token = Jwts.builder()
@@ -79,6 +81,14 @@ public class JwtTokenProvider implements InitializingBean {
                 .setExpiration(expiredAt)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
+
+        // 쿠키에 토큰 저장
+        Cookie cookie = new Cookie(REFRESH_COOKIE_NAME, token);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+//        cookie.setSecure(true); // https 에서만 가능
+        cookie.setMaxAge(REFRESH_TOKEN_EXPIRED_TIME);
+        httpServletResponse.addCookie(cookie);
 
         // 토큰 반환
         return token;
@@ -124,12 +134,42 @@ public class JwtTokenProvider implements InitializingBean {
         return new UsernamePasswordAuthenticationToken(principal, null, authorities);
     }
 
-    public String resolveToken(HttpServletRequest request) {
+    public Long getUserId(String token) {
+        String id = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody().getSubject();
+
+        return Long.parseLong(id);
+    }
+
+    public String resolveAccessToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
         return null;
     }
+
+    public String resolveRefreshToken(HttpServletRequest request) {
+        if (request.getCookies() == null) return null;
+        Optional<Cookie> cookie = Arrays.stream(request.getCookies())
+                .filter(c -> c.getName().equals(REFRESH_COOKIE_NAME))
+                .findFirst();
+        return cookie.map(Cookie::getValue).orElse(null);
+    }
+
+    public void cookieInitial(HttpServletResponse response) {
+        // 쿠키에 토큰 저장
+        Cookie cookie = new Cookie(REFRESH_COOKIE_NAME, null);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+//        cookie.setSecure(true); // https 에서만 가능
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
+
+
 }
 

@@ -13,6 +13,8 @@ public enum JwtTokenErrorCode implements ErrorCode {
     INVALID_TOKEN_SIGNATURE(HttpStatus.UNAUTHORIZED, "JWT-004", "JWT 토큰 서명이 잘못되었습니다."),
     UNSUPPORTED_TOKEN(HttpStatus.UNAUTHORIZED, "JWT-005", "JWT 토큰 포맷이 잘못되었습니다."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "JWT-006", "유효하지 않은 JWT 토큰입니다."),
+    ACCESS_TOKEN_AND_REFRESH_TOKEN_MISMATCH(HttpStatus.UNAUTHORIZED, "JWT-007", "액세스 토큰과 리프레시 토큰 정보가 일치하지 않습니다."),
+
     ;
     
     private HttpStatus httpStatus;

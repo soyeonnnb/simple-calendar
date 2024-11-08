@@ -1,26 +1,28 @@
 package com.simplest.simplecalendar.domain.user.service;
 
 import com.simplest.simplecalendar.domain.user.dto.request.LoginRequest;
+import com.simplest.simplecalendar.domain.user.dto.request.ReissueTokenRequest;
 import com.simplest.simplecalendar.domain.user.dto.request.SignupRequest;
-import com.simplest.simplecalendar.domain.user.dto.response.LoginResponse;
+import com.simplest.simplecalendar.domain.user.dto.response.TokenResponse;
 import com.simplest.simplecalendar.domain.user.entity.LoginMethod;
 import com.simplest.simplecalendar.domain.user.entity.RefreshToken;
 import com.simplest.simplecalendar.domain.user.entity.User;
 import com.simplest.simplecalendar.domain.user.repository.RefreshTokenRepository;
 import com.simplest.simplecalendar.domain.user.repository.UserRepository;
 import com.simplest.simplecalendar.global.exception.dto.RestApiException;
+import com.simplest.simplecalendar.global.exception.errorCode.JwtTokenErrorCode;
 import com.simplest.simplecalendar.global.exception.errorCode.UserErrorCode;
 import com.simplest.simplecalendar.global.jwt.token.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.TimeToLive;
-import org.springframework.data.redis.core.index.Indexed;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -45,7 +47,8 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public LoginResponse login(LoginRequest loginRequest) {
+    @Transactional
+    public TokenResponse login(LoginRequest loginRequest, HttpServletResponse httpServletResponse) {
         User user = userRepository.findByEmailAndMethod(loginRequest.getEmail(), LoginMethod.DEFAULT)
                 .orElseThrow(() -> new RestApiException(UserErrorCode.LOGIN_FAIL, "[uid="+loginRequest.getEmail()+"]"));
 
@@ -54,7 +57,7 @@ public class UserService {
         }
 
         String accessToken = jwtTokenProvider.createAccessToken(user.getId());
-        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId(), httpServletResponse);
 
         refreshTokenRepository.save(RefreshToken.builder()
                         .accessToken(accessToken)
@@ -62,7 +65,38 @@ public class UserService {
                         .expiredAt((new Date()).getTime() + REFRESH_TOKEN_EXPIRED_TIME)
                 .build());
 
-        return LoginResponse.of(accessToken, refreshToken);
+        return TokenResponse.of(accessToken);
     }
 
+    @Transactional
+    public TokenResponse reissueToken(ReissueTokenRequest reissueTokenRequest, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        String resolveRefreshToken = jwtTokenProvider.resolveRefreshToken(httpServletRequest);
+        Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findByRefreshToken(resolveRefreshToken);
+        if (optionalRefreshToken.isEmpty()) {
+            jwtTokenProvider.cookieInitial(httpServletResponse);
+            throw new RestApiException(JwtTokenErrorCode.EXPIRED_REFRESH_TOKEN);
+        }
+
+        RefreshToken refreshToken = optionalRefreshToken.get();
+        if (!refreshToken.getAccessToken().equals(reissueTokenRequest.getAccessToken())) {
+            jwtTokenProvider.cookieInitial(httpServletResponse);
+            throw new RestApiException(JwtTokenErrorCode.ACCESS_TOKEN_AND_REFRESH_TOKEN_MISMATCH);
+        }
+
+        refreshTokenRepository.deleteById(refreshToken.getAuthId());
+
+        Long id = jwtTokenProvider.getUserId(reissueTokenRequest.getAccessToken());
+
+        String newAccessToken = jwtTokenProvider.createAccessToken(id);
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(id, httpServletResponse);
+
+        refreshTokenRepository.save(RefreshToken.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .expiredAt((new Date()).getTime() + REFRESH_TOKEN_EXPIRED_TIME)
+                .build());
+
+        return TokenResponse.of(newAccessToken);
+
+    }
 }

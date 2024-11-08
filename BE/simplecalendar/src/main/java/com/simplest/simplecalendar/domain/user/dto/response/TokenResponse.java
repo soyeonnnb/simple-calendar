@@ -1,20 +1,20 @@
 package com.simplest.simplecalendar.domain.user.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
-import org.springframework.context.annotation.Bean;
 
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class LoginResponse {
+@Schema(defaultValue = "토큰 발급 응답 DTO")
+public class TokenResponse {
+    @Schema(description = "액세스 JWT TOKEN")
     private String accessToken;
-    private String refreshToken;
 
-    public static LoginResponse of(String accessToken, String refreshToken) {
-        return LoginResponse.builder()
+    public static TokenResponse of(String accessToken) {
+        return TokenResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
                 .build();
     }
 }

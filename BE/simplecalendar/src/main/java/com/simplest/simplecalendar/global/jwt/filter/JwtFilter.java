@@ -32,6 +32,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private final List<String> whiteList = List.of(
             "/api/v1/user/login",
             "/api/v1/user/signup",
+            "/api/v1/user/reissue",
 
             "/error",
             "/login",
@@ -60,7 +61,7 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         log.info("Jwt Filter 진행 ..");
-        String accessToken = jwtTokenProvider.resolveToken(request);
+        String accessToken = jwtTokenProvider.resolveAccessToken(request);
 
         // 만약 토큰이 존재하면 SecurityContextHolder에 권한을 생성하여 삽입
         if (accessToken != null) {
