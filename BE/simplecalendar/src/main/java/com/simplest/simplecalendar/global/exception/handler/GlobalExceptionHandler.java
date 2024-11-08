@@ -13,13 +13,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.method.ParameterValidationResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 // 전역적으로 에러를 처리.
 // Spring 내부에서 스프링 예외를 미리 처리해 둔 ResponseEntityExceptionHandler 존재.
@@ -49,6 +52,7 @@ public class GlobalExceptionHandler { // extends ResponseEntityExceptionHandler 
         .body(ApiResponse.createError(e.getErrorCode().getCode(), e.getErrorCode().getMessage()));
   }
 
+  // @RequestBody
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ApiResponse<List<ValidationError>>> handleMethodArgumentNotValidException(
       MethodArgumentNotValidException e) {
@@ -59,6 +63,21 @@ public class GlobalExceptionHandler { // extends ResponseEntityExceptionHandler 
 
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(ApiResponse.createError("ERROR-001", errors, "데이터 유효성 검사에 실패했습니다."));
+  }
+
+  // RequestParam
+  @ExceptionHandler(HandlerMethodValidationException.class)
+  public ResponseEntity<ApiResponse<List<ValidationError>>> handleHandlerMethodValidationException(
+          HandlerMethodValidationException e) {;
+
+    List<ValidationError> errors = e.getAllValidationResults().stream()
+            .map(ParameterValidationResult::getResolvableErrors)
+            .flatMap(List::stream)
+            .map(ValidationError::of)
+            .toList();
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.createError("ERROR-001", errors, "데이터 유효성 검사에 실패했습니다."));
   }
 
   @ExceptionHandler(IllegalArgumentException.class)

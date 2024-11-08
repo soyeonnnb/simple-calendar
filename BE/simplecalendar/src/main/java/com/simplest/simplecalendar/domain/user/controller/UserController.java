@@ -3,6 +3,7 @@ package com.simplest.simplecalendar.domain.user.controller;
 import com.simplest.simplecalendar.domain.user.dto.request.LoginRequest;
 import com.simplest.simplecalendar.domain.user.dto.request.ReissueTokenRequest;
 import com.simplest.simplecalendar.domain.user.dto.request.SignupRequest;
+import com.simplest.simplecalendar.domain.user.dto.response.DuplicateCheckResponse;
 import com.simplest.simplecalendar.domain.user.dto.response.TokenResponse;
 import com.simplest.simplecalendar.domain.user.service.UserService;
 import com.simplest.simplecalendar.global.dto.ApiResponse;
@@ -11,14 +12,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @Tag(name = "User", description = "사용자 관련 API")
 @RestController
@@ -47,5 +50,12 @@ public class UserController {
     public ResponseEntity<ApiResponse<TokenResponse>> reissueToken(@Valid @RequestBody ReissueTokenRequest reissueTokenRequest, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         TokenResponse response = userService.reissueToken(reissueTokenRequest, httpServletRequest, httpServletResponse);
         return new ResponseEntity<>(ApiResponse.createSuccess(response, "토큰 재발급에 성공하였습니다."), HttpStatus.OK);
+    }
+
+    @GetMapping("/duplicate")
+    @Operation(summary = "이메일 중복확인", description = "이메일(email)을 이용하여 중복을 확인합니다.")
+    public ResponseEntity<ApiResponse<DuplicateCheckResponse>> duplicateEmail(@RequestParam("email") @Email(message = "이메일 형식이 아닙니다.") String email) {
+        DuplicateCheckResponse response = userService.checkDuplicateEmail(email);
+        return new ResponseEntity<>(ApiResponse.createSuccess(response, "이메일 중복확인에 성공하였습니다."), HttpStatus.OK);
     }
 }

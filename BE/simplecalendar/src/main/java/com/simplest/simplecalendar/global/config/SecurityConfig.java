@@ -48,7 +48,7 @@ public class SecurityConfig {
                                 .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll() // 인가 안되면 자체 시큐리티 타는데 -> 이거 막아주는 로직
                                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                                 .requestMatchers("/login", "/oauth2/**", "/error").permitAll()
-                                .requestMatchers("/api/v1/user/login", "/api/v1/user/signup", "/api/v1/user/reissue").permitAll()
+                                .requestMatchers("/api/v1/user/login", "/api/v1/user/signup", "/api/v1/user/reissue", "/api/v1/user/duplicate").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

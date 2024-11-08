@@ -3,6 +3,7 @@ package com.simplest.simplecalendar.domain.user.service;
 import com.simplest.simplecalendar.domain.user.dto.request.LoginRequest;
 import com.simplest.simplecalendar.domain.user.dto.request.ReissueTokenRequest;
 import com.simplest.simplecalendar.domain.user.dto.request.SignupRequest;
+import com.simplest.simplecalendar.domain.user.dto.response.DuplicateCheckResponse;
 import com.simplest.simplecalendar.domain.user.dto.response.TokenResponse;
 import com.simplest.simplecalendar.domain.user.entity.LoginMethod;
 import com.simplest.simplecalendar.domain.user.entity.RefreshToken;
@@ -15,11 +16,11 @@ import com.simplest.simplecalendar.global.exception.errorCode.UserErrorCode;
 import com.simplest.simplecalendar.global.jwt.token.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.Optional;
@@ -104,6 +105,10 @@ public class UserService {
                 .build());
 
         return TokenResponse.of(newAccessToken);
+    }
 
+    @Transactional(readOnly = true)
+    public DuplicateCheckResponse checkDuplicateEmail(String email) {
+        return DuplicateCheckResponse.of(userRepository.existsByEmailAndMethod(email, LoginMethod.DEFAULT));
     }
 }
