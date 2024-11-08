@@ -38,8 +38,15 @@ public class UserService {
 
     @Transactional
     public void signup(SignupRequest signupRequest) {
-        if (userRepository.existsByEmailAndMethod(signupRequest.getEmail(), LoginMethod.DEFAULT)) {
-            throw new RestApiException(UserErrorCode.EMAIL_DUPLICATED, "[email="+signupRequest.getEmail()+"]");
+        Optional<User> optionalUser = userRepository.findByEmail(signupRequest.getEmail());
+
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            if (user.getMethod().equals(LoginMethod.DEFAULT)) {
+                throw new RestApiException(UserErrorCode.DEFAULT_LOGIN_USER, "[email="+signupRequest.getEmail()+"]");
+            } else {
+                throw new RestApiException(UserErrorCode.SOCIAL_LOGIN_USER, "[email="+signupRequest.getEmail()+"]");
+            }
         }
 
         User user = signupRequest.toEntity(passwordEncoder.encode(signupRequest.getPassword()));
